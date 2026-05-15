@@ -7,10 +7,14 @@ create table if not exists users (
   user_type text default 'student',
   google_access_token text,
   google_refresh_token text,
-  telegram_chat_id text,
+  telegram_chat_id text,         -- comma-separated list of chat_ids
+  telegram_last_update_id bigint, -- tracks consumed Telegram updates
   fcm_token text,
   created_at timestamptz default now()
 );
+
+-- Migration: run this if the table already exists
+alter table users add column if not exists telegram_last_update_id bigint;
 
 create table if not exists briefings (
   id uuid primary key default gen_random_uuid(),

@@ -5,7 +5,7 @@
 
 ---
 
-## Status: PHASE 1 + FRONTEND SCAFFOLD COMPLETE
+## Status: PHASE 2 COMPLETE — TELEGRAM INTEGRATED
 
 ---
 
@@ -70,14 +70,22 @@
 
 ---
 
-## Next Up (Phase 2)
+### Phase 2 — Telegram
+- [x] P2.1 .env.example updated with TELEGRAM_BOT_TOKEN setup instructions
+- [x] P2.2 Telegram service (backend/services/telegram_service.py) — getUpdates polling, 24h filter, chat_id scoping, update offset tracking
+- [x] P2.3 Telegram data fed into briefing aggregation (briefing.py updated)
+- [x] Sources router (backend/routers/sources.py) — link/unlink/status endpoints
+- [x] Sources screen updated — real Telegram linking UI with bottom sheet + step-by-step instructions
+- [x] API service updated — getTelegramBotInfo, linkTelegram, unlinkTelegram, getSourcesStatus
+- [x] Supabase schema updated — telegram_last_update_id column + migration statement
 
-- [ ] P2.1 Create Telegram Bot via BotFather, set TELEGRAM_BOT_TOKEN in .env
-- [ ] P2.2 Telegram service — read messages from last 24h
-- [ ] P2.3 Add Telegram data to briefing aggregation
+---
+
+## Next Up (Phase 3+)
+
 - [ ] P3.x Push notifications (FCM) — only if time allows
-- [ ] P4.x Learning screen — PDF upload, review cards
-- [ ] P5.x Demo polish — animations, APK build
+- [ ] P4.x Learning screen — PDF upload + AI memory extraction + review cards
+- [ ] P5.x Demo polish — animations, APK build, deploy backend to Railway/Render
 
 ---
 

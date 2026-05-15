@@ -4,7 +4,7 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, briefing
+from routers import auth, briefing, sources
 
 app = FastAPI(title="CogniOS API", version="0.1.0")
 
@@ -18,6 +18,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(briefing.router)
+app.include_router(sources.router)
 
 
 @app.get("/health")

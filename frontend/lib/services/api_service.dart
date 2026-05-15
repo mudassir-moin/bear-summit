@@ -43,4 +43,46 @@ class ApiService {
     if (resp.statusCode != 200) throw Exception('Failed to refresh briefing');
     return jsonDecode(resp.body);
   }
+
+  static Future<Map<String, bool>> getSourcesStatus() async {
+    final userId = await _getUserId();
+    if (userId == null) throw Exception('Not authenticated');
+
+    final uri = Uri.parse('$_baseUrl/sources/status').replace(
+      queryParameters: {'user_id': userId},
+    );
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) throw Exception('Failed to load sources status');
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return data.map((k, v) => MapEntry(k, v as bool));
+  }
+
+  static Future<Map<String, dynamic>> getTelegramBotInfo() async {
+    final resp = await http.get(Uri.parse('$_baseUrl/sources/telegram/bot-info'));
+    if (resp.statusCode != 200) throw Exception('Failed to get bot info');
+    return jsonDecode(resp.body);
+  }
+
+  static Future<void> linkTelegram({
+    required String userId,
+    required String chatId,
+  }) async {
+    final resp = await http.post(
+      Uri.parse('$_baseUrl/sources/telegram/link'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_id': userId, 'chat_id': chatId}),
+    );
+    if (resp.statusCode != 200) {
+      final body = jsonDecode(resp.body);
+      throw Exception(body['detail'] ?? 'Failed to link Telegram');
+    }
+  }
+
+  static Future<void> unlinkTelegram({required String userId}) async {
+    final uri = Uri.parse('$_baseUrl/sources/telegram/unlink').replace(
+      queryParameters: {'user_id': userId},
+    );
+    final resp = await http.delete(uri);
+    if (resp.statusCode != 200) throw Exception('Failed to unlink Telegram');
+  }
 }

@@ -6,6 +6,7 @@ from models.schemas import BriefingResponse, PriorityItem
 from db.supabase_client import get_client
 from services.gmail_service import fetch_recent_emails
 from services.calendar_service import fetch_upcoming_events
+from services.telegram_service import fetch_recent_messages as fetch_telegram_messages
 from services.ai_service import generate_briefing
 from prompts.briefing_prompt import DEMO_BRIEFING, DEMO_ITEMS
 
@@ -22,7 +23,11 @@ def _is_cache_fresh(generated_at_str: str) -> bool:
         return False
 
 
-def _format_aggregated_data(emails: list[dict], events: list[dict]) -> str:
+def _format_aggregated_data(
+    emails: list[dict],
+    events: list[dict],
+    telegram_msgs: list[dict],
+) -> str:
     lines = ["=== GMAIL (unread emails) ==="]
     for e in emails[:30]:
         lines.append(f"- From: {e['from']} | Subject: {e['subject']} | {e['snippet'][:100]}")
@@ -30,6 +35,12 @@ def _format_aggregated_data(emails: list[dict], events: list[dict]) -> str:
     lines.append("\n=== GOOGLE CALENDAR (next 7 days) ===")
     for ev in events:
         lines.append(f"- {ev['start']} | {ev['title']} | {ev.get('description', '')[:80]}")
+
+    if telegram_msgs:
+        lines.append("\n=== TELEGRAM (last 24h) ===")
+        for msg in telegram_msgs[:40]:
+            chat = msg.get("chat_title") or "DM"
+            lines.append(f"- [{chat}] {msg['sender']}: {msg['text'][:120]}")
 
     return "\n".join(lines)
 
@@ -69,13 +80,27 @@ async def get_briefing(user_id: str = Query(...), force: bool = Query(False)):
     user = user_row.data[0]
     access_token = user.get("google_access_token", "")
     refresh_token = user.get("google_refresh_token", "")
+    telegram_chat_id = user.get("telegram_chat_id")
+    last_update_id = user.get("telegram_last_update_id")
 
-    emails, events = [], []
+    emails, events, telegram_msgs = [], [], []
+
     if access_token:
         emails = await fetch_recent_emails(access_token, refresh_token)
         events = await fetch_upcoming_events(access_token, refresh_token)
 
-    aggregated = _format_aggregated_data(emails, events)
+    if telegram_chat_id and os.environ.get("TELEGRAM_BOT_TOKEN"):
+        chat_ids = [cid.strip() for cid in telegram_chat_id.split(",") if cid.strip()]
+        telegram_msgs, new_last_id = await fetch_telegram_messages(
+            chat_ids=chat_ids,
+            last_update_id=int(last_update_id) if last_update_id else None,
+        )
+        if new_last_id is not None:
+            db.table("users").update(
+                {"telegram_last_update_id": new_last_id}
+            ).eq("id", user_id).execute()
+
+    aggregated = _format_aggregated_data(emails, events, telegram_msgs)
     ai_result = await generate_briefing(
         aggregated_data=aggregated,
         user_name=user.get("name", "there"),
