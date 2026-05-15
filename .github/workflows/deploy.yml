@@ -7,7 +7,10 @@ on:
       - main
 
 permissions:
-  contents: write   # needed to push to gh-pages branch
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # suppress Node.js 20 warnings
 
 jobs:
   # ── 1. Deploy Flutter web to GitHub Pages ──────────────────────────────────
@@ -16,14 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
           channel: 'stable'
           cache: true
 
-      - name: Generate web platform files (non-destructive)
+      - name: Generate web platform files
         working-directory: frontend
         run: |
           cp pubspec.yaml pubspec.yaml.bak
@@ -37,56 +39,64 @@ jobs:
       - name: Build Flutter web
         working-directory: frontend
         run: |
+          API_URL="${{ secrets.API_URL }}"
+          if [ -z "$API_URL" ]; then API_URL="https://cognios-api.onrender.com"; fi
           flutter build web --release \
             --base-href /bear-summit/ \
-            --dart-define=API_URL=${{ secrets.API_URL || 'https://cognios-api.onrender.com' }}
+            --dart-define=API_URL="$API_URL"
 
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: frontend/build/web
           branch: gh-pages
           clean: true
 
-  # ── 2. Build debug APK and upload as artifact ─────────────────────────────
+  # ── 2. Build debug APK ─────────────────────────────────────────────────────
   build-apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.2'
           channel: 'stable'
           cache: true
 
-      - name: Generate Android platform files (non-destructive)
-        working-directory: frontend
+      # Create a clean Flutter project in /tmp, then drop in our source.
+      # More reliable than flutter create on an existing directory in CI.
+      - name: Scaffold fresh Flutter project
         run: |
-          cp pubspec.yaml pubspec.yaml.bak
-          flutter create --org com.cognios --project-name cognios --platforms android . 2>/dev/null || true
-          cp pubspec.yaml.bak pubspec.yaml
+          flutter create \
+            --org com.cognios \
+            --project-name cognios \
+            --platforms android \
+            /tmp/cognios_build
+
+      - name: Inject our source into scaffold
+        run: |
+          cp -r frontend/lib /tmp/cognios_build/
+          cp frontend/pubspec.yaml /tmp/cognios_build/pubspec.yaml
 
       - name: Install dependencies
-        working-directory: frontend
+        working-directory: /tmp/cognios_build
         run: flutter pub get
 
       - name: Build debug APK
-        working-directory: frontend
+        working-directory: /tmp/cognios_build
         run: |
+          API_URL="${{ secrets.API_URL }}"
+          if [ -z "$API_URL" ]; then API_URL="https://cognios-api.onrender.com"; fi
           flutter build apk --debug \
-            --dart-define=API_URL=${{ secrets.API_URL || 'https://cognios-api.onrender.com' }}
+            --dart-define=API_URL="$API_URL"
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: cognios-debug-${{ github.sha }}
-          path: frontend/build/app/outputs/flutter-apk/app-debug.apk
+          name: cognios-debug-apk
+          path: /tmp/cognios_build/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14
