@@ -9411,7 +9411,7 @@ auk(){var s=t.UD
 return A.an(["content","## Good morning.\n\n### URGENT\n- **Assignment deadline moved to tonight** \u2014 Prof. Smith updated the submission portal *(Gmail)*\n- **Scholarship application closes in 4 hours** \u2014 KFAS Engineering Grant, link in email *(Gmail)*\n\n### IMPORTANT\n- Networking event tonight at 6 PM \u2014 AI & Society panel, KFAS auditorium *(Calendar)*\n- Friend's birthday dinner at 8 PM \u2014 conflicts with your 7 PM study block *(Calendar)*\n- New grading rubric uploaded \u2014 CS301 midterm, check LMS *(Gmail)*\n\n### UPCOMING\n- CS301 midterm \u2014 tomorrow 10 AM *(Calendar)*\n- Team standup \u2014 Monday 9 AM *(Calendar)*\n\n### YOU MAY HAVE MISSED\n- Internship deadline mentioned in group chat 6 hours ago \u2014 Google STEP, closes Sunday *(Telegram)*\n- Professor's office hours cancelled this week *(Gmail, unread)*\n\n### OPPORTUNITIES\n- Google STEP internship for undergraduates \u2014 deadline this Sunday *(Telegram)*\n- AI research assistant position \u2014 posted by Dr. Al-Rashid *(Gmail)*\n","items",A.a3(new A.a0(B.H_,new A.Yk(),s),!0,s.i("au.E")),"generated_at",new A.eX(Date.now(),!1).aqk(),"from_cache",!0],t.N,t.z)},
 Yn(a,b){var s=0,r=A.K(t.a),q,p,o,n,m
 var $async$Yn=A.L(function(c,d){if(c===1)return A.H(d,r)
-while(true)switch(s){case 0:p=A.dT("https://cognios-api.onrender.com/auth/google")
+while(true)switch(s){case 0:p=A.dT("https://bear-summit.onrender.com/auth/google")
 o=t.N
 n=A.an(["Content-Type","application/json"],o,o)
 s=3
@@ -9433,7 +9433,7 @@ break}s=4
 return A.D(A.GK(),$async$qa)
 case 4:l=c
 if(l==null)throw A.d(A.c6("Not authenticated"))
-k=A.dT("https://cognios-api.onrender.com/briefing")
+k=A.dT("https://bear-summit.onrender.com/briefing")
 j=A.t(t.N,t.z)
 j.n(0,"user_id",l)
 if(a)j.n(0,"force","true")
@@ -9476,7 +9476,7 @@ case 4:p=b
 if(p==null)throw A.d(A.c6("Not authenticated"))
 o=t.N
 s=5
-return A.D(A.asX(A.dT("https://cognios-api.onrender.com/sources/status").Br(A.an(["user_id",p],o,t.z))),$async$vR)
+return A.D(A.asX(A.dT("https://bear-summit.onrender.com/sources/status").Br(A.an(["user_id",p],o,t.z))),$async$vR)
 case 5:n=b
 if(n.b!==200)throw A.d(A.c6("Failed to load sources status"))
 q=t.a.a(B.aM.nX(A.vn(A.vb(n.e)).dK(n.w),null)).mK(0,new A.Yl(),o,t.y)
@@ -9487,7 +9487,7 @@ return A.J($async$vR,r)},
 Ym(){var s=0,r=A.K(t.a),q,p
 var $async$Ym=A.L(function(a,b){if(a===1)return A.H(b,r)
 while(true)switch(s){case 0:s=3
-return A.D(A.asX(A.dT("https://cognios-api.onrender.com/sources/telegram/bot-info")),$async$Ym)
+return A.D(A.asX(A.dT("https://bear-summit.onrender.com/sources/telegram/bot-info")),$async$Ym)
 case 3:p=b
 if(p.b!==200)throw A.d(A.c6("Failed to get bot info"))
 q=B.aM.nX(A.vn(A.vb(p.e)).dK(p.w),null)
@@ -9497,7 +9497,7 @@ case 1:return A.I(q,r)}})
 return A.J($async$Ym,r)},
 Yo(a,b){var s=0,r=A.K(t.H),q,p,o,n
 var $async$Yo=A.L(function(c,d){if(c===1)return A.H(d,r)
-while(true)switch(s){case 0:q=A.dT("https://cognios-api.onrender.com/sources/telegram/link")
+while(true)switch(s){case 0:q=A.dT("https://bear-summit.onrender.com/sources/telegram/link")
 p=t.N
 o=A.an(["Content-Type","application/json"],p,p)
 s=2
@@ -9509,7 +9509,7 @@ return A.J($async$Yo,r)},
 Yp(a){var s=0,r=A.K(t.H)
 var $async$Yp=A.L(function(b,c){if(b===1)return A.H(c,r)
 while(true)switch(s){case 0:s=2
-return A.D(A.aB7(A.dT("https://cognios-api.onrender.com/sources/telegram/unlink").Br(A.an(["user_id",a],t.N,t.z))),$async$Yp)
+return A.D(A.aB7(A.dT("https://bear-summit.onrender.com/sources/telegram/unlink").Br(A.an(["user_id",a],t.N,t.z))),$async$Yp)
 case 2:if(c.b!==200)throw A.d(A.c6("Failed to unlink Telegram"))
 return A.I(null,r)}})
 return A.J($async$Yp,r)},
