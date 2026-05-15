@@ -83,6 +83,18 @@ jobs:
           cp -r frontend/lib /tmp/cognios_build/
           cp frontend/pubspec.yaml /tmp/cognios_build/pubspec.yaml
 
+      # Inject google-services.json for Firebase (stored as base64 GitHub secret).
+      # If secret is not set yet, the build continues without FCM — demo mode still works.
+      - name: Inject google-services.json
+        run: |
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode \
+              > /tmp/cognios_build/android/app/google-services.json
+            echo "google-services.json injected"
+          else
+            echo "GOOGLE_SERVICES_JSON secret not set — skipping FCM setup"
+          fi
+
       - name: Install dependencies
         working-directory: /tmp/cognios_build
         run: flutter pub get
