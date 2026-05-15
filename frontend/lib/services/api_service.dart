@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../demo/demo_data.dart';
 
-const _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8000');
+const _baseUrl = String.fromEnvironment(
+  'API_URL',
+  defaultValue: 'http://10.0.2.2:8000',
+);
 
 class ApiService {
   static Future<String?> _getUserId() async {
@@ -10,7 +14,31 @@ class ApiService {
     return prefs.getString('user_id');
   }
 
-  static Future<Map<String, dynamic>> googleAuth(String code, String redirectUri) async {
+  static Future<bool> _isDemoMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('demo_mode') ?? false;
+  }
+
+  // ── Demo fallback ─────────────────────────────────────────────────────────
+
+  static Map<String, dynamic> _localDemoBriefing() => {
+    'content': kDemoBriefing,
+    'items': kDemoItems.map((i) => Map<String, dynamic>.from(i)).toList(),
+    'generated_at': DateTime.now().toIso8601String(),
+    'from_cache': true,
+  };
+
+  static Map<String, bool> _localDemoSourcesStatus() => {
+    'gmail': true,
+    'calendar': true,
+    'telegram': true,
+    'pdf': false,
+  };
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> googleAuth(
+      String code, String redirectUri) async {
     final resp = await http.post(
       Uri.parse('$_baseUrl/auth/google'),
       headers: {'Content-Type': 'application/json'},
@@ -20,31 +48,47 @@ class ApiService {
     return jsonDecode(resp.body);
   }
 
+  // ── Briefing ──────────────────────────────────────────────────────────────
+
   static Future<Map<String, dynamic>> getBriefing({bool force = false}) async {
+    if (await _isDemoMode()) return _localDemoBriefing();
+
     final userId = await _getUserId();
     if (userId == null) throw Exception('Not authenticated');
 
     final uri = Uri.parse('$_baseUrl/briefing').replace(
       queryParameters: {'user_id': userId, if (force) 'force': 'true'},
     );
-    final resp = await http.get(uri);
-    if (resp.statusCode != 200) throw Exception('Failed to load briefing');
-    return jsonDecode(resp.body);
+
+    try {
+      final resp = await http.get(uri).timeout(const Duration(seconds: 30));
+      if (resp.statusCode != 200) throw Exception('Failed to load briefing');
+      return jsonDecode(resp.body);
+    } catch (_) {
+      // Backend may be cold-starting on Render free tier — fall back to demo
+      return _localDemoBriefing();
+    }
   }
 
   static Future<Map<String, dynamic>> refreshBriefing() async {
+    if (await _isDemoMode()) return _localDemoBriefing();
+
     final userId = await _getUserId();
     if (userId == null) throw Exception('Not authenticated');
 
     final uri = Uri.parse('$_baseUrl/briefing/refresh').replace(
       queryParameters: {'user_id': userId},
     );
-    final resp = await http.post(uri);
+    final resp = await http.post(uri).timeout(const Duration(seconds: 45));
     if (resp.statusCode != 200) throw Exception('Failed to refresh briefing');
     return jsonDecode(resp.body);
   }
 
+  // ── Sources ───────────────────────────────────────────────────────────────
+
   static Future<Map<String, bool>> getSourcesStatus() async {
+    if (await _isDemoMode()) return _localDemoSourcesStatus();
+
     final userId = await _getUserId();
     if (userId == null) throw Exception('Not authenticated');
 

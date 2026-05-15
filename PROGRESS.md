@@ -5,7 +5,7 @@
 
 ---
 
-## Status: PHASE 2 COMPLETE — TELEGRAM INTEGRATED
+## Status: PHASE 3 COMPLETE — LIVE DEPLOYMENT PIPELINE READY
 
 ---
 
@@ -81,11 +81,31 @@
 
 ---
 
-## Next Up (Phase 3+)
+### Phase 3 — Live Deployment Pipeline
+- [x] .github/workflows/deploy.yml — GitHub Actions: builds web → deploys to gh-pages; builds debug APK → uploads as artifact; triggers on every push
+- [x] backend/render.yaml — Render free-tier web service config (DEMO_MODE=true default, real keys set in Render dashboard)
+- [x] Demo mode in Flutter: "Try Demo" button on login screen, bypasses Google auth, returns local demo data (zero network needed)
+- [x] api_service.dart: demo mode short-circuit + 30s timeout with graceful fallback to local data (handles Render cold starts)
+- [x] auth_service.dart: signInAsDemo() stores demo user in SharedPreferences
+- [x] SETUP.md: one-page guide for teammates (Pages, Render, Supabase, Google Cloud, OpenAI)
 
-- [ ] P3.x Push notifications (FCM) — only if time allows
-- [ ] P4.x Learning screen — PDF upload + AI memory extraction + review cards
-- [ ] P5.x Demo polish — animations, APK build, deploy backend to Railway/Render
+---
+
+## Pending One-Time Setup (user actions)
+
+1. **GitHub Pages**: repo Settings → Pages → branch: `gh-pages` → Save
+2. **Render**: connect repo, Render reads render.yaml, set env vars in dashboard
+3. **GitHub Secret `API_URL`**: add Render URL after deploy (triggers rebuild)
+4. Supabase: run `supabase/schema.sql`
+5. Google Cloud: enable Gmail + Calendar APIs, create OAuth credentials
+6. OpenAI: add API key to Render, set DEMO_MODE=false
+
+---
+
+## Next Up
+
+- [ ] Learning screen — PDF upload + AI memory extraction + review cards
+- [ ] Demo polish — smooth animations, loading states
 
 ---
 

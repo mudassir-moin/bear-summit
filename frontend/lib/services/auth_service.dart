@@ -20,6 +20,20 @@ class AuthService {
     return prefs.getString('user_id') != null;
   }
 
+  /// Skip Google auth entirely — shows demo data locally, no backend needed.
+  static Future<void> signInAsDemo() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', 'demo');
+    await prefs.setString('user_name', 'Demo User');
+    await prefs.setString('user_email', 'demo@cognios.app');
+    await prefs.setBool('demo_mode', true);
+  }
+
+  static Future<bool> isDemoMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('demo_mode') ?? false;
+  }
+
   static Future<Map<String, dynamic>?> signInWithGoogle() async {
     final account = await _googleSignIn.signIn();
     if (account == null) return null;
@@ -40,8 +54,9 @@ class AuthService {
   }
 
   static Future<void> signOut() async {
-    await _googleSignIn.signOut();
     final prefs = await SharedPreferences.getInstance();
+    final isDemo = prefs.getBool('demo_mode') ?? false;
+    if (!isDemo) await _googleSignIn.signOut();
     await prefs.clear();
   }
 
