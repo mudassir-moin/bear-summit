@@ -1,4 +1,5 @@
 // Local demo data — used when user taps "Try Demo" on login screen.
+// No network calls needed when demo_mode=true in SharedPreferences.
 // Mirrors the backend's DEMO_BRIEFING / DEMO_ITEMS so no network call is needed.
 
 const kDemoBriefing = r"""
@@ -86,5 +87,30 @@ const kDemoItems = [
     'urgency_score': 55,
     'deadline': null,
     'action_required': false,
+  },
+];
+
+const kDemoLearningMaterials = [
+  {
+    'id': 'demo-learn-0',
+    'title': 'Fourier Transforms — Week 6 Lecture',
+    'summary':
+        'Fourier transforms decompose signals into frequency components. They are essential in signal processing, image compression, and solving differential equations.',
+    'key_concepts': [
+      {'concept': 'Fourier Series', 'explanation': 'Represents a periodic function as a sum of sine and cosine waves.'},
+      {'concept': 'Frequency Domain', 'explanation': 'A representation of a signal in terms of its constituent frequencies rather than time.'},
+      {'concept': 'DFT', 'explanation': 'Discrete Fourier Transform — applies Fourier analysis to sampled signals.'},
+      {'concept': 'Convolution Theorem', 'explanation': 'Convolution in time domain equals multiplication in frequency domain.'},
+      {'concept': 'Nyquist Theorem', 'explanation': 'A signal must be sampled at twice its highest frequency to avoid aliasing.'},
+    ],
+    'review_questions': [
+      {'question': 'What does a Fourier transform convert a signal from?', 'answer': 'From the time domain to the frequency domain.'},
+      {'question': 'What is the Nyquist sampling rate?', 'answer': 'At least twice the highest frequency in the signal.'},
+      {'question': 'State the convolution theorem.', 'answer': 'Convolution in time = multiplication in frequency domain.'},
+      {'question': 'What is aliasing?', 'answer': 'Distortion caused by undersampling a signal below the Nyquist rate.'},
+      {'question': 'Name one real-world application of Fourier transforms.', 'answer': 'Audio/image compression (MP3, JPEG), signal processing, MRI scanning.'},
+    ],
+    'next_review_date': '2026-05-15',
+    'review_interval_days': 1,
   },
 ];

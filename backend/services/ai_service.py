@@ -2,6 +2,7 @@ import os
 import json
 from openai import AsyncOpenAI
 from prompts.briefing_prompt import BRIEFING_PROMPT
+from prompts.memory_prompt import MEMORY_EXTRACTION_PROMPT
 
 _client: AsyncOpenAI | None = None
 
@@ -35,3 +36,15 @@ async def generate_briefing(
 
     content = response.choices[0].message.content
     return json.loads(content)
+
+
+async def extract_memory(text: str) -> dict:
+    prompt = MEMORY_EXTRACTION_PROMPT.format(text=text)
+    response = await _get_client().chat.completions.create(
+        model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
+        messages=[{"role": "user", "content": prompt}],
+        response_format={"type": "json_object"},
+        temperature=0.3,
+        max_tokens=1000,
+    )
+    return json.loads(response.choices[0].message.content)
