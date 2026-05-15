@@ -7,7 +7,62 @@ from db.supabase_client import get_client
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
-FCM_URL = "https://fcm.googleapis.com/fcm/send"
+
+async def _get_access_token() -> str | None:
+    """Get a short-lived OAuth2 token from the service account JSON."""
+    sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "")
+    if not sa_json:
+        return None
+
+    try:
+        import google.auth
+        import google.auth.transport.requests
+        from google.oauth2 import service_account
+
+        sa_info = json.loads(sa_json)
+        credentials = service_account.Credentials.from_service_account_info(
+            sa_info,
+            scopes=["https://www.googleapis.com/auth/firebase.messaging"],
+        )
+        request = google.auth.transport.requests.Request()
+        credentials.refresh(request)
+        return credentials.token
+    except Exception as e:
+        print(f"FCM auth error: {e}")
+        return None
+
+
+async def _send_fcm_v1(token: str, title: str, body: str) -> bool:
+    sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "")
+    if not sa_json:
+        return False
+
+    try:
+        project_id = json.loads(sa_json).get("project_id", "")
+        access_token = await _get_access_token()
+        if not access_token:
+            return False
+
+        url = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                url,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "message": {
+                        "token": token,
+                        "notification": {"title": title, "body": body},
+                        "android": {"priority": "HIGH"},
+                    }
+                },
+            )
+        return resp.status_code == 200
+    except Exception as e:
+        print(f"FCM send error: {e}")
+        return False
 
 
 class FCMTokenRequest(BaseModel):
@@ -20,27 +75,6 @@ class NotificationPayload(BaseModel):
     title: str
     body: str
     type: str = "general"
-
-
-async def _send_fcm(token: str, title: str, body: str) -> bool:
-    server_key = os.environ.get("FCM_SERVER_KEY", "")
-    if not server_key:
-        return False
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            FCM_URL,
-            headers={
-                "Authorization": f"key={server_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "to": token,
-                "notification": {"title": title, "body": body},
-                "priority": "high",
-            },
-        )
-    return resp.status_code == 200
 
 
 @router.post("/register")
@@ -60,7 +94,7 @@ async def send_notification(body: NotificationPayload):
         return {"status": "no_token"}
 
     token = user.data[0]["fcm_token"]
-    ok = await _send_fcm(token, body.title, body.body)
+    ok = await _send_fcm_v1(token, body.title, body.body)
 
     db.table("notifications").insert({
         "user_id": body.user_id,
