@@ -6,6 +6,7 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
       # Safe demo default — app works immediately without any real API keys.
       # Change DEMO_MODE to "false" once you add real credentials below.
