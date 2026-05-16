@@ -102,8 +102,34 @@
 
 ---
 
+---
+
+### Phase 4 — Jarvis Voice Assistant + Progressive Reminders
+*(Planned, partially implemented — resume from here next session)*
+
+**Backend (partially done):**
+- [x] `backend/routers/jarvis.py` — `GET /jarvis/brief?user_id=X&category=all|urgent|academic|work|home`. Filters cached items by category using keyword matching, builds natural-language spoken_text from templates, full demo mode with pre-scripted responses for all 5 categories. No AI call needed.
+- [ ] `backend/main.py` — register jarvis router (`from routers import jarvis` + `app.include_router(jarvis.router)`)
+- [ ] `backend/services/reminder_service.py` — progressive reminder logic (>14d: none, 7–14d: weekly, 3–7d: every 2d, 1–3d: daily, <24h: 2x/day). Piggybacked on briefing fetch — no scheduler needed.
+- [ ] `backend/routers/briefing.py` — call `check_and_send_reminders()` at end of briefing fetch (non-blocking asyncio.create_task)
+- [ ] `supabase/schema.sql` — add `ALTER TABLE items ADD COLUMN IF NOT EXISTS last_reminded_at timestamptz;`
+
+**Frontend (not started):**
+- [ ] `frontend/pubspec.yaml` — add `flutter_tts: ^4.0.2`
+- [ ] `frontend/lib/demo/demo_data.dart` — add Jarvis demo constants (kDemoJarvisGreeting, kDemoJarvisSpoken, kDemoJarvisUrgentCards, kDemoJarvisAcademicCards, kDemoJarvisWorkCards, kDemoJarvisHomeCards, kDemoJarvisAllSpoken)
+- [ ] `frontend/lib/services/jarvis_service.dart` — fetchBrief(category), speak(text, rate), stop(). Uses `awaitSpeakCompletion(true)` so speak() awaits TTS completion. Speech rate from SharedPreferences key `jarvis_speech_rate`.
+- [ ] `frontend/lib/widgets/jarvis_orb.dart` — animated pulsing circle (idle=slow, speaking=fast+glow, done=static) using AnimationController
+- [ ] `frontend/lib/screens/jarvis_screen.dart` — 3-phase screen:
+  - Phase 1: Greeting orb + personalized TTS greeting (time-of-day aware, shows urgentCount, top urgent title, nearest milestone, asks "What would you like to start with?"). Receives items list from DashboardScreen constructor arg.
+  - Phase 2: Suggestion chips slide up (🔴 Urgent / 🎓 Academic / 💼 Work / 🏠 Home / ✨ Everything) + speed slider (0.3–0.7, default 0.45)
+  - Phase 3: Orb pulses fast, TTS speaks spoken_text, cards fade in one by one (concurrent with TTS, staggered by text-length × 60ms). Done button + Ask another button.
+- [ ] `frontend/lib/screens/dashboard_screen.dart` — add green mic FAB (bottom-right), passes `_items` list to JarvisScreen
+
+---
+
 ## Next Up
 
+- [ ] **Phase 4 Jarvis** — implement frontend files above (resume from dashboard_screen FAB → jarvis_screen → orb widget → jarvis_service)
 - [ ] Learning screen — PDF upload + AI memory extraction + review cards
 - [ ] Demo polish — smooth animations, loading states
 

@@ -140,10 +140,93 @@ Implementation: Backend assigns urgency score (0–100). If score > threshold, t
 - Browser automation / autonomous agents
 - Complex memory graphs or vector databases
 - Real-time sync across all platforms simultaneously
-- Voice assistant
+- Voice INPUT (speech-to-text / microphone) ← do not implement; use tap chips instead
 - Full offline support
 - Multi-agent systems
 - Local AI models
+
+---
+
+## Feature 6: Jarvis Voice Assistant (Added 2026-05-16)
+
+**Concept**: A mic FAB on the Dashboard opens a full-screen "Jarvis mode" overlay. The AI greets the user by name with a live summary of their day, then offers suggestion chips. The user taps a chip, and the AI speaks a natural-language summary while text detail cards fade in one by one in sync — like Iron Man's JARVIS.
+
+**Why valuable**: Users don't want to read tabs. They want to hear a brief, human-sounding summary while seeing supporting detail cards appear. Zero typing needed.
+
+**Credit cost**: Zero extra AI calls. Backend reformats already-cached briefing items using string templates. Demo mode returns pre-scripted spoken text.
+
+### New Files
+```
+backend/routers/jarvis.py              ← GET /jarvis/brief?user_id=X&category=...
+backend/services/reminder_service.py  ← progressive reminder logic (piggybacked on briefing)
+frontend/lib/screens/jarvis_screen.dart
+frontend/lib/widgets/jarvis_orb.dart
+frontend/lib/services/jarvis_service.dart
+```
+
+### Modified Files
+```
+backend/main.py                        ← register jarvis router
+backend/routers/briefing.py           ← call check_and_send_reminders() at end
+supabase/schema.sql                   ← ALTER TABLE items ADD COLUMN last_reminded_at
+frontend/pubspec.yaml                 ← add flutter_tts: ^4.0.2
+frontend/lib/demo/demo_data.dart      ← add Jarvis demo constants
+frontend/lib/screens/dashboard_screen.dart ← add mic FAB
+```
+
+### Jarvis UX — Three Phases
+
+**Phase 1 — Personalized Greeting**
+- Pulsing green orb in center
+- Time-of-day greeting: "Good morning/afternoon/evening, [first name]."
+- Built from already-loaded item list (no extra API call):
+  - "Your [top urgent title] is due tonight — top priority."
+  - "Your [nearest milestone] is in [N] days, worth preparing early."
+  - "What would you like to start with?"
+- TTS speaks all of this as one fluent sentence
+- Demo: "Good morning. Your assignment is due tonight — top priority. Your CS301 midterm is in 3 days. You have 4 other items. What would you like to start with?"
+
+**Phase 2 — Suggestion Chips**
+- 5 chips slide up from bottom: 🔴 Urgent · 🎓 Academic · 💼 Work · 🏠 Home · ✨ Everything
+- Speed slider shown: 🐢 ────── 🐇 (range 0.3–0.7, saved to SharedPreferences)
+- User taps chip → Phase 3
+
+**Phase 3 — Speaking + Cards**
+- Orb pulses fast (speaking state)
+- TTS speaks natural summary (from /jarvis/brief endpoint)
+- Cards fade in + slide up one by one, concurrent with speech, staggered by text-length × 60ms
+- "Ask another" + "Done" buttons at bottom
+
+**Category filtering (backend)**:
+- urgent: priority == "urgent" or urgency_score > 75
+- academic: keywords → assignment, lecture, exam, study, course, professor, class, homework, rubric, lms
+- work: meeting, deadline, project, client, standup, email, report, presentation
+- home: birthday, dinner, appointment, bill, family, grocery, doctor
+- all: everything sorted by urgency_score desc
+
+---
+
+## Feature 7: Progressive Preparation Reminders (Added 2026-05-16)
+
+**Concept**: For upcoming events with deadlines, send FCM push notifications with increasing frequency as the event approaches — not every day, only often enough to give the user time to act.
+
+**Reminder cadence**:
+| Days until event | Remind every |
+|---|---|
+| > 14 days | No reminder yet |
+| 7–14 days | Every 7 days |
+| 3–7 days | Every 2 days |
+| 1–3 days | Every day |
+| < 24 hours | Morning (9 AM) + Evening (6 PM) |
+
+**Implementation**: No scheduler needed. Piggybacked on `GET /briefing` — when user fetches briefing, backend checks each upcoming/important item with a deadline:
+1. `days_until = (deadline_date - today).days`
+2. Check `last_reminded_at` on item row
+3. If overdue for reminder → send FCM push, update `last_reminded_at`
+
+**FCM push format**: Title: `"Prepare: [item title]"` / Body: `"[N] days away. Tap to see your summary."`
+
+**Supabase**: `ALTER TABLE items ADD COLUMN IF NOT EXISTS last_reminded_at timestamptz;`
 
 ---
 
@@ -485,14 +568,16 @@ Priority Card:
 
 ## Demo Script (For Judges)
 
-1. Open app → Google Sign-In
-2. Show Sources screen — Gmail, Calendar connected, Telegram linked, PDF uploaded
-3. Tap "Refresh Briefing" → AI generates briefing (show loading → reveal)
-4. Read out key items: hidden deadline in Telegram, friend's birthday conflict, assignment moved
-5. Go to Dashboard → show URGENT card glowing red
-6. Tap Learning → show review questions generated from uploaded lecture PDF
-7. Demo push notification arriving on phone: "Assignment closes in 2 hours"
-8. Closing line: "Instead of checking 12 apps and still missing things — one briefing, zero slipping through the cracks."
+1. Open app → Google Sign-In (or "Try Demo" — works offline)
+2. Dashboard loads → URGENT cards visible immediately (pre-cached demo data)
+3. **Tap mic FAB** (green, bottom-right) → Jarvis screen opens
+4. Orb pulses, AI speaks: *"Good morning. Your assignment is due tonight — top priority. Your CS301 midterm is in 3 days. You have 4 other items. What would you like to start with?"*
+5. Tap **🔴 Urgent** chip → orb pulses fast, AI speaks urgent summary, 2 red cards fade in as it speaks
+6. Tap **🎓 Academic** → AI speaks academic summary, 2 blue cards appear
+7. Tap **Done** → back to Dashboard
+8. Show Sources screen — Gmail/Calendar connected, Telegram linked
+9. Show Learning screen → review questions from uploaded PDF, spaced repetition schedule
+10. Closing: *"Instead of checking 12 apps and still missing things — one briefing, zero slipping through the cracks. And now it talks to you."*
 
 ---
 
@@ -543,4 +628,4 @@ Branch: claude/plan-mvp-implementation-3maww
 
 ---
 
-*Last updated: 2026-05-15*
+*Last updated: 2026-05-16*
