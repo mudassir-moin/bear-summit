@@ -122,41 +122,39 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
-              // ── Continue with Google (only shown when client ID is configured) ──
-              if (googleSignInAvailable) ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: OutlinedButton(
-                    onPressed:
-                        (_loadingDemo || _loadingGoogle) ? null : _signInWithGoogle,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: AppColors.border, width: 1),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: _loadingGoogle
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: AppColors.textPrimary))
-                        : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.g_mobiledata, size: 22),
-                              SizedBox(width: 8),
-                              Text('Continue with Google',
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500)),
-                            ],
-                          ),
+              // ── Continue with Google ────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton(
+                  onPressed:
+                      (_loadingDemo || _loadingGoogle) ? null : _signInWithGoogle,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.border, width: 1),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
+                  child: _loadingGoogle
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AppColors.textPrimary))
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.g_mobiledata, size: 22),
+                            SizedBox(width: 8),
+                            Text('Continue with Google',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500)),
+                          ],
+                        ),
                 ),
-                const SizedBox(height: 12),
-              ],
+              ),
+              const SizedBox(height: 12),
               Center(
                 child: Text(
                   'Demo uses sample data • No account needed',
