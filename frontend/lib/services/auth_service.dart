@@ -4,6 +4,9 @@ import 'api_service.dart';
 
 const _clientId = String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
 
+/// True only when a real Google OAuth client ID was injected at build time.
+const googleSignInAvailable = _clientId.isNotEmpty;
+
 final _googleSignIn = GoogleSignIn(
   clientId: _clientId,
   scopes: [
