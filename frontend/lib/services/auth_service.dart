@@ -35,6 +35,12 @@ class AuthService {
   }
 
   static Future<Map<String, dynamic>?> signInWithGoogle() async {
+    if (_clientId.isEmpty) {
+      throw Exception(
+        'Google Sign-In is not configured for this build. '
+        'Use "Try Demo" instead, or add GOOGLE_CLIENT_ID to GitHub Secrets.',
+      );
+    }
     final account = await _googleSignIn.signIn();
     if (account == null) return null;
 

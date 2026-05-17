@@ -3,9 +3,11 @@ import 'package:shimmer/shimmer.dart';
 import '../theme/app_theme.dart';
 import '../widgets/priority_card.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onSignOut;
+  const DashboardScreen({super.key, this.onSignOut});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -46,6 +48,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.refresh, size: 20),
             onPressed: () => _load(force: true),
             tooltip: 'Refresh briefing',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.person_outline, size: 22),
+            tooltip: 'Account',
+            onSelected: (value) async {
+              if (value == 'signout') {
+                await AuthService.signOut();
+                if (mounted) widget.onSignOut?.call();
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'signout', child: Text('Sign out')),
+            ],
           ),
         ],
       ),

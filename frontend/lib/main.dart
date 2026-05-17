@@ -59,12 +59,13 @@ class _AuthGateState extends State<AuthGate> {
     if (!_signedIn!) {
       return LoginScreen(onLogin: () => setState(() => _signedIn = true));
     }
-    return const MainShell();
+    return MainShell(onSignOut: () => setState(() => _signedIn = false));
   }
 }
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final VoidCallback onSignOut;
+  const MainShell({super.key, required this.onSignOut});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -73,18 +74,17 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _index = 0;
   NotificationBannerData? _banner;
-
-  static const _screens = [
-    DashboardScreen(),
-    BriefingScreen(),
-    LearningScreen(),
-    SourcesScreen(),
-  ];
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    // Show a simulated urgent alert after 3 seconds to demo in-app notifications
+    _screens = [
+      DashboardScreen(onSignOut: widget.onSignOut),
+      const BriefingScreen(),
+      const LearningScreen(),
+      const SourcesScreen(),
+    ];
     Future.delayed(const Duration(seconds: 3), _checkForUrgentItems);
   }
 

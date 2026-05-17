@@ -41,9 +41,11 @@ jobs:
         run: |
           API_URL="${{ secrets.API_URL }}"
           if [ -z "$API_URL" ]; then API_URL="https://cognios-api.onrender.com"; fi
+          GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
           flutter build web --release \
             --base-href /bear-summit/ \
-            --dart-define=API_URL="$API_URL"
+            --dart-define=API_URL="$API_URL" \
+            --dart-define=GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID"
 
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
