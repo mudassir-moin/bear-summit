@@ -147,6 +147,51 @@ Implementation: Backend assigns urgency score (0–100). If score > threshold, t
 
 ---
 
+## Feature 8: Grouped Notification Center (Added 2026-05-17)
+
+**Concept**: Replace per-item notification spam with a single, clean notification experience. A bell icon in the dashboard AppBar (with badge count) opens a bottom sheet showing tasks grouped into collapsible sections: 🔴 Urgent, 🎓 Academic, 💼 Work, 🏠 Home, 📅 Events, ❌ Missed. Each section header shows a count. Users tap to expand and see only the relevant tasks. Tapping "✓ Done" on any task removes it immediately. Once a task's deadline has passed it auto-moves to Missed and disappears from its original section.
+
+**Why valuable**: Judges and users already have notification fatigue. One clean tray that self-cleans is dramatically better than 6 individual pings.
+
+**Category rules**:
+| Section | Logic |
+|---|---|
+| 🔴 Urgent | `priority == 'urgent'` OR `urgency_score > 75`, deadline not passed |
+| 🎓 Academic | keyword match: assignment, exam, lecture, cs301, rubric, lms… |
+| 💼 Work | keyword match: meeting, project, standup, client, presentation… |
+| 🏠 Home | keyword match: birthday, dinner, appointment, grocery, doctor… |
+| 📅 Events | `source == 'calendar'`, deadline not passed |
+| ❌ Missed | deadline < now OR `priority == 'missed'` |
+
+An item past its deadline appears **only** in Missed, regardless of other categories.
+
+### New Files
+```
+frontend/lib/widgets/notification_center_sheet.dart  ← bottom sheet with ExpansionTile per category
+frontend/lib/services/notification_center_service.dart  ← groupItems(), badgeCount(), isExpired(), acknowledgeItem()
+frontend/lib/services/local_notification_service.dart   ← flutter_local_notifications wrapper (Android grouped push)
+backend/routers/items.py                                ← POST /items/acknowledge (sets is_acknowledged=true)
+```
+
+### Modified Files
+```
+frontend/pubspec.yaml                        ← add flutter_local_notifications: ^17.2.2
+frontend/lib/main.dart                       ← call LocalNotificationService.init() at startup
+frontend/lib/screens/dashboard_screen.dart  ← add bell icon + badge in AppBar, wire acknowledge
+frontend/lib/services/api_service.dart      ← add acknowledgeItem() method
+backend/main.py                             ← register items router
+backend/routers/briefing.py                 ← auto-expire items past deadline (set priority='missed')
+```
+
+### Mark as Done
+- **Demo mode**: remove from local `_items` list immediately (no backend call)
+- **Production**: `POST /items/acknowledge` → `is_acknowledged = true` in Supabase → item gone
+
+### Android OS Notifications
+Uses `flutter_local_notifications` with InboxStyle + notification groups. One notification per active category (expandable in Android notification shade). One notification channel per category registered at app startup with appropriate importance levels (Urgent = high, Missed = low).
+
+---
+
 ## Feature 6: Jarvis Voice Assistant (Added 2026-05-16)
 
 **Concept**: A mic FAB on the Dashboard opens a full-screen "Jarvis mode" overlay. The AI greets the user by name with a live summary of their day, then offers suggestion chips. The user taps a chip, and the AI speaks a natural-language summary while text detail cards fade in one by one in sync — like Iron Man's JARVIS.

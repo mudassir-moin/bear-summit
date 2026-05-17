@@ -130,6 +130,7 @@
 ## Next Up
 
 - [ ] **Phase 4 Jarvis** — implement frontend files above (resume from dashboard_screen FAB → jarvis_screen → orb widget → jarvis_service)
+- [ ] **Feature 8 — Grouped Notification Center** — bell icon + badge in dashboard AppBar; bottom sheet with collapsible ExpansionTile per category (Urgent/Academic/Work/Home/Events/Missed); "✓ Done" dismisses items; deadline auto-expiry moves items to Missed; Android OS grouped push via flutter_local_notifications. See PLAN.md Feature 8 for full spec.
 - [ ] Learning screen — PDF upload + AI memory extraction + review cards
 - [ ] Demo polish — smooth animations, loading states
 
